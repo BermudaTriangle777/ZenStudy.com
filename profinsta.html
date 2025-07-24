@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <meta charset="UTF-8" />
+  <title>Instagram DM UI</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet" />
+  <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/index.js"></script>
+  <style>
+    emoji-picker {
+      position: absolute;
+      bottom: 60px;
+      left: 0;
+      right: 0;
+      margin: auto;
+      width: 320px !important;
+      max-width: 90vw;
+      z-index: 9999;
+    }
+    emoji-picker.hidden {
+      display: none !important;
+    }
+    emoji-picker::part(search) { display: none !important; }
+    emoji-picker::part(categories) { display: none !important; }
+    .insta-text-msg {
+      background-color: #833AB4;
+      color: white;
+      padding: 0.6rem 1rem;
+      border-radius: 1.4rem;
+      max-width: 60%;
+      margin: 4px 0;
+      font-size: 0.95rem;
+      animation: popIn 0.2s ease-in-out;
+      word-break: break-word;
+    }
+    .insta-emoji-msg {
+      background: none !important;
+      color: #fff;
+      font-size: 2.5rem;
+      line-height: 1.2;
+      padding: 0.2em 0.5em;
+      border-radius: 1.4rem;
+      max-width: 60%;
+      margin: 8px 0;
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      word-break: break-word;
+    }
+    .insta-img-msg {
+      background: #1e1e1e;
+      border-radius: 0.9rem;
+      padding: 0.3rem;
+      margin: 4px 0;
+      max-width: 60%;
+    }
+    .insta-img-msg img {
+      max-width: 220px;
+      max-height: 220px;
+      border-radius: 0.7rem;
+    }
+    @keyframes popIn {
+      0% { transform: scale(0.8); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    #fullImagePreview {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: #111;
+      backdrop-filter: blur(2px);
+      z-index: 9999;
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+    #fullImagePreview img {
+      max-height: 75vh;
+      max-width: 92vw;
+      object-fit: contain;
+      border-radius: 12px;
+    }
+    .preview-header {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      padding: 1rem;
+    }
+    .preview-footer {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+    }
+    .share-btn-large {
+      background-color: #3797ef;
+      color: white;
+      width: 55px;
+      height: 55px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8rem;
+    }
+    .close-btn-large {
+      background-color: rgba(0,0,0,0.6);
+      padding: 8px;
+      border-radius: 50%;
+      font-size: 1.3rem;
+      color: white;
+    }
+    #chatArea::-webkit-scrollbar {
+      display: none;
+    }
+    #chatArea {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    .footer-float {
+      background: transparent !important;
+      box-shadow: none !important;
+      border: none !important;
+      pointer-events: none;
+    }
+    .input-float {
+      pointer-events: auto;
+      background: #18181b;
+      box-shadow: 0 2px 16px 0 rgba(0,0,0,0.18);
+    }
+    .msg-status {
+      font-size: 0.8em;
+      color: #b3e5fc;
+      margin-top: 2px;
+      text-align: right;
+      margin-bottom: 2px;
+      margin-right: 8px;
+    }
+    .user-msg {
+      align-self: flex-end !important;
+      background-color: #3797ef !important;
+      color: #fff !important;
+    }
+    .admin-msg {
+      align-self: flex-start !important;
+      background-color: #833AB4 !important;
+      color: #fff !important;
+    }
+    .user-img-msg {
+      align-self: flex-end !important;
+      background: #222 !important;
+    }
+    .admin-img-msg {
+      align-self: flex-start !important;
+      background: #1e1e1e !important;
+    }
+  </style>
+</head>
+
+<body class="bg-black text-white font-sans h-screen flex flex-col">
+
+  <!-- Fixed Header -->
+  <div class="bg-black flex items-center justify-between px-4 py-3 border-b border-gray-800 fixed top-0 left-0 right-0 z-10" style="height:60px;">
+   <div class="flex items-center gap-2 truncate max-w-[60%]">
+      <img src="./eye.png" class="w-10 h-10 rounded-full" />
+      <div>
+        <a href="https://instagram.com/pravvveennnn" target="_blank" class="text-lg font-semibold hover:underline block">@pravvveennnn</a>
+        <p class="text-xs text-gray-400 truncate">pravv...</p>
+      </div>
+    </div>
+    <div class="flex gap-4 text-xl">
+      <i class="fas fa-user-friends"></i>
+      <i class="fas fa-phone -scale-x-100"></i>
+      <i class="fas fa-video"></i>
+    </div>
+  </div>
+
+  <div class="flex flex-col flex-grow overflow-hidden">
+
+    <!-- Profile Info -->
+    <main id="profileBlock" class="flex flex-col items-center px-4 pt-[70px]">
+      <img class="w-30 h-30 rounded-full" src="./eye.png" width="120" />
+      <p class="mt-6 text-xl font-semibold">シ</p>
+      <p class="text-white text-lg mt-1">pravvveennnn</p>
+      <p class="text-gray-500 text-sm mt-1">1.8K followers · 0 posts</p>
+      <p class="text-gray-500 text-center text-sm mt-1 max-w-xs">You don't follow each other on Instagram</p>
+      <a href="https://www.instagram.com/pravvveennnn" target="_blank">
+        <button class="mt-6 bg-gray-800 rounded-md px-6 py-2 font-semibold hover:bg-gray-700">View profile</button>
+      </a>
+      <!-- SUGGESTION BOX BELOW VIEW PROFILE, LEFT ALIGNED -->
+      <div id="chatSuggestion"
+        class="flex items-center gap-2 bg-purple-700/90 text-white rounded-2xl px-4 py-2 mt-3 mb-2 shadow-lg text-sm cursor-pointer select-none"
+        style="max-width: 90%; align-self: flex-start;">
+        <i class="fas fa-robot text-lg"></i>
+        <span>
+          💡 Suggestion: Tell me your issue, ask for help, or just say hi!
+        </span>
+      </div>
+    </main>
+
+    <!-- Chat Area -->
+    <div id="chatArea" class="flex flex-col px-4 overflow-y-auto flex-grow pt-[70px] pb-[90px]"></div>
+  </div>
+
+  <!-- Floating Footer (Input + Buttons) -->
+  <footer class="footer-float fixed bottom-0 left-0 right-0 z-10 flex justify-center items-end pb-4 pointer-events-none" style="height:90px;">
+    <div class="input-float rounded-full flex items-center gap-3 px-4 h-14 max-w-2xl w-full mx-auto relative pointer-events-auto">
+      <button id="cameraIcon" class="bg-purple-700 w-[33px] h-[33px] rounded-full flex items-center justify-center text-white text-lg shrink-0">
+        <i class="fas fa-camera"></i>
+      </button>
+      <input id="messageInput" type="text" placeholder="Message..." class="flex-grow bg-transparent text-sm text-white placeholder-gray-400 focus:outline-none" />
+      <div id="iconGroup" class="flex items-center gap-2 text-white text-lg ml-[-60px]">
+        <button><i class="fas fa-microphone"></i></button>
+        <button id="galleryEmojiBtn"><i class="far fa-image"></i></button>
+        <button id="emojiBtn"><i class="far fa-smile"></i></button>
+      </div>
+      <button id="sendButton" class="hidden text-white text-lg"><i class="fas fa-paper-plane"></i></button>
+      <input type="file" id="imageInput" accept="image/*" class="hidden" />
+      <emoji-picker id="emojiPicker" class="hidden"></emoji-picker>
+    </div>
+  </footer>
+
+  <!-- Fullscreen Image Preview (Instagram Style) -->
+  <div id="fullImagePreview" class="hidden flex">
+    <div class="preview-header">
+      <button class="close-btn-large" id="closePreviewBtn"><i class="fas fa-arrow-left"></i></button>
+    </div>
+    <img id="previewImageFull" src="" />
+    <div class="preview-footer">
+      <button class="share-btn-large" id="confirmSendImage"><i class="fas fa-paper-plane"></i></button>
+    </div>
+  </div>
+
+  <!-- Firebase & Chat Script -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import {
+      getFirestore,
+      collection,
+      addDoc,
+      query,
+      orderBy,
+      serverTimestamp,
+      setDoc,
+      doc,
+      onSnapshot,
+      updateDoc
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyC9rehsf-0jkb9dAeT1-0Z1C-yRJ0YI9dA",
+      authDomain: "gymnm-ce84b.firebaseapp.com",
+      projectId: "gymnm-ce84b",
+      storageBucket: "gymnm-ce84b.appspot.com",
+      messagingSenderId: "474926929394",
+      appId: "1:474926929394:web:6abdb807caba2751a5c76b",
+      measurementId: "G-6R9S8LYZNF"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const input = document.getElementById("messageInput");
+    const sendBtn = document.getElementById("sendButton");
+    const camera = document.getElementById("cameraIcon");
+    const icons = document.getElementById("iconGroup");
+    const profileBlock = document.getElementById("profileBlock");
+    const chatArea = document.getElementById("chatArea");
+    const emojiPicker = document.getElementById("emojiPicker");
+    const emojiBtn = document.getElementById("emojiBtn");
+    const imageInput = document.getElementById("imageInput");
+    const galleryEmojiBtn = document.getElementById("galleryEmojiBtn");
+    const fullImagePreview = document.getElementById("fullImagePreview");
+    const previewImageFull = document.getElementById("previewImageFull");
+    const closePreviewBtn = document.getElementById("closePreviewBtn");
+    const confirmSendImage = document.getElementById("confirmSendImage");
+    const chatSuggestion = document.getElementById("chatSuggestion");
+
+    let emojiPickerOpen = false;
+    let imgPreviewData = null;
+
+    let deviceId = localStorage.getItem("deviceId");
+    if (!deviceId) {
+      deviceId = "device_" + Math.random().toString(36).substring(2);
+      localStorage.setItem("deviceId", deviceId);
+    }
+
+    const msgRef = collection(db, "insta_dm", deviceId, "messages");
+
+    // 12hr format with English am/pm
+    function formatTime12(date) {
+      let h = date.getHours();
+      let m = date.getMinutes();
+      let ampm = h >= 12 ? "pm" : "am";
+      h = h % 12;
+      h = h ? h : 12; // 0 => 12
+      return `${h}:${m.toString().padStart(2, "0")} ${ampm}`;
+    }
+
+    // Date helpers
+    function isSameDay(d1, d2) {
+      return d1.getFullYear() === d2.getFullYear() &&
+             d1.getMonth() === d2.getMonth() &&
+             d1.getDate() === d2.getDate();
+    }
+    function isYesterday(date) {
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      return isSameDay(date, yesterday);
+    }
+    function formatDateDivider(date) {
+      const now = new Date();
+      if (isSameDay(date, now)) {
+        return formatTime12(date);
+      } else if (isYesterday(date)) {
+        return "Yesterday";
+      } else {
+        return `${date.getDate()} ${date.toLocaleString('en-US', { month: 'long' })}`;
+      }
+    }
+
+    // Time divider logic
+    function addTimeDivider(timestamp, prevTimestamp) {
+      const date = new Date(timestamp);
+      let showDivider = false;
+      let dividerText = "";
+
+      if (!prevTimestamp) {
+        showDivider = true;
+        dividerText = formatDateDivider(date);
+      } else {
+        const prevDate = new Date(prevTimestamp);
+        if (!isSameDay(date, prevDate)) {
+          showDivider = true;
+          dividerText = formatDateDivider(date);
+        } else if ((timestamp - prevTimestamp) > 15 * 60 * 1000) {
+          showDivider = true;
+          dividerText = formatTime12(date);
+        }
+      }
+
+      if (showDivider) {
+        const timeDiv = document.createElement("div");
+        timeDiv.className = "text-xs text-gray-400 text-center mb-2";
+        timeDiv.textContent = dividerText;
+        chatArea.appendChild(timeDiv); // append, not prepend
+      }
+    }
+
+    // Emoji-only message style
+    function isOnlyEmojiMsg(text) {
+      // This regex matches only emoji and whitespace
+      return /^[\p{Emoji}\u200d\s]+$/u.test(text.trim());
+    }
+
+    // Scroll to bottom helper
+    function scrollToBottom() {
+      chatArea.scrollTop = chatArea.scrollHeight;
+    }
+
+    // Message rendering
+    let lastMsgTime = null;
+    function renderMessages(messages) {
+      chatArea.innerHTML = "";
+      lastMsgTime = null;
+
+      // Find last user message index
+      let lastUserIdx = -1;
+      for (let i = messages.length - 1; i >= 0; i--) {
+        if (!messages[i].from || messages[i].from !== "admin") {
+          lastUserIdx = i;
+          break;
+        }
+      }
+
+      messages.forEach((m, idx) => {
+        if (!m) return;
+        let div;
+        addTimeDivider(m.ts, lastMsgTime);
+        lastMsgTime = m.ts;
+
+        // Determine if this is a user or admin message
+        const isUserMsg = !m.from || m.from !== "admin";
+        const isAdminMsg = m.from === "admin";
+
+        // Message type and alignment
+        if (m.type === "text" || m.type === "emoji") {
+          if (isOnlyEmojiMsg(m.content)) {
+            div = document.createElement("div");
+            div.className = "insta-emoji-msg";
+            div.textContent = m.content;
+            if (isUserMsg) div.classList.add("user-msg");
+            else div.classList.add("admin-msg");
+          } else {
+            div = document.createElement("div");
+            div.className = "insta-text-msg";
+            div.textContent = m.content;
+            if (isUserMsg) div.classList.add("user-msg");
+            else div.classList.add("admin-msg");
+          }
+        } else if (m.type === "image") {
+          div = document.createElement("div");
+          div.className = "insta-img-msg";
+          const img = document.createElement("img");
+          img.src = m.content;
+          div.appendChild(img);
+          if (isUserMsg) div.classList.add("user-img-msg");
+          else div.classList.add("admin-img-msg");
+        }
+
+        chatArea.appendChild(div);
+
+        // Only show status for the last user message
+        if (isUserMsg && idx === lastUserIdx) {
+          const statusDiv = document.createElement("div");
+          statusDiv.className = "msg-status";
+          statusDiv.textContent = m.seen ? "Seen by the developer" : "Sent";
+          chatArea.appendChild(statusDiv);
+        }
+      });
+
+      chatArea.scrollTop = chatArea.scrollHeight;
+    }
+    async function saveMessage(type, content) {
+      // Create parent doc so admin can see this user
+      await setDoc(doc(db, "insta_dm", deviceId), {
+        createdAt: serverTimestamp()
+      }, { merge: true });
+
+      // Save the message as before
+      await addDoc(msgRef, {
+        type, content, timestamp: serverTimestamp(),
+      });
+    }
+
+    // --- SUGGESTION BOX LOGIC ---
+    function removeSuggestion() {
+      if (chatSuggestion) chatSuggestion.style.display = "none";
+    }
+    if (chatSuggestion) {
+      chatSuggestion.addEventListener("click", removeSuggestion);
+    }
+
+    // --- SEND MESSAGE LOGIC ---
+    function sendMessage() {
+      const msg = input.value.trim();
+      if (!msg) return;
+      removeSuggestion(); // Hide suggestion on first message
+      saveMessage(isOnlyEmojiMsg(msg) ? "emoji" : "text", msg);
+      input.value = "";
+      input.focus();
+      profileBlock.style.display = "none";
+      sendBtn.classList.add("hidden");
+      camera.style.display = "flex";
+      icons.style.display = "flex";
+    }
+
+    sendBtn.addEventListener("click", sendMessage);
+    input.addEventListener("keydown", e => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+
+    input.addEventListener("input", () => {
+      if (input.value.trim()) {
+        sendBtn.classList.remove("hidden");
+        camera.style.display = "none";
+        icons.style.display = "none";
+      } else {
+        sendBtn.classList.add("hidden");
+        camera.style.display = "flex";
+        icons.style.display = "flex";
+      }
+    });
+
+    // --- Emoji Picker: Multiple selection ---
+    emojiBtn.addEventListener("click", e => {
+      e.stopPropagation();
+      emojiPicker.classList.toggle("hidden");
+      emojiPickerOpen = !emojiPicker.classList.contains("hidden");
+    });
+
+    emojiPicker.addEventListener("emoji-click", e => {
+      const emoji = e.detail.unicode;
+      const start = input.selectionStart;
+      const end = input.selectionEnd;
+      input.value = input.value.slice(0, start) + emoji + input.value.slice(end);
+      input.focus();
+      input.setSelectionRange(start + emoji.length, start + emoji.length);
+      // Do NOT close the picker here!
+      sendBtn.classList.remove("hidden");
+      camera.style.display = "none";
+      icons.style.display = "none";
+    });
+
+    document.addEventListener("click", e => {
+      if (!emojiPicker.contains(e.target) && e.target !== emojiBtn) {
+        emojiPicker.classList.add("hidden");
+        emojiPickerOpen = false;
+      }
+    });
+
+    galleryEmojiBtn.addEventListener("click", () => {
+      imageInput.click();
+    });
+
+    // Image compression function
+    async function compressImage(file, maxSize, quality) {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = function () {
+          let width = img.width;
+          let height = img.height;
+          if (width > maxSize || height > maxSize) {
+            if (width > height) {
+              height *= maxSize / width;
+              width = maxSize;
+            } else {
+              width *= maxSize / height;
+              height = maxSize;
+            }
+          }
+          const canvas = document.createElement("canvas");
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL("image/jpeg", quality));
+        };
+        const reader = new FileReader();
+        reader.onload = (e) => { img.src = e.target.result; };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    imageInput.addEventListener("change", async () => {
+      const file = imageInput.files[0];
+      if (file) {
+        // Compress image before preview
+        const compressedDataUrl = await compressImage(file, 800, 0.7);
+        imgPreviewData = compressedDataUrl;
+        previewImageFull.src = imgPreviewData;
+        fullImagePreview.style.display = "flex";
+      }
+    });
+
+    closePreviewBtn.addEventListener("click", () => {
+      fullImagePreview.style.display = "none";
+      imgPreviewData = null;
+    });
+
+    confirmSendImage.addEventListener("click", () => {
+      if (!imgPreviewData) return;
+      saveMessage("image", imgPreviewData);
+      fullImagePreview.style.display = "none";
+      imgPreviewData = null;
+      profileBlock.style.display = "none";
+    });
+
+    // Real-time message listener
+    let unsubMsg = null;
+    function listenMessages() {
+      if (unsubMsg) unsubMsg();
+      const q = query(msgRef, orderBy("timestamp"));
+      unsubMsg = onSnapshot(q, async (snap) => {
+        let messages = [];
+        snap.forEach(docSnap => {
+          const m = docSnap.data();
+          let ts = m.timestamp?.toDate ? m.timestamp.toDate().getTime() : Date.now();
+          messages.push({ ...m, ts, id: docSnap.id });
+        });
+        renderMessages(messages);
+        if (messages.length > 0) profileBlock.style.display = "none";
+        scrollToBottom();
+      });
+    }
+
+    listenMessages();
+  </script>
+</body>
+</html>
