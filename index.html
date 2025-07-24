@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Study App Auth</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+  <link href="https://fonts.googleapis.com/css?family=Inter:400,600&display=swap" rel="stylesheet">
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', Arial, sans-serif;
+      background: #e0e7ff;
+      overflow: hidden;
+    }
+    body {
+      min-height: 100vh;
+      min-width: 100vw;
+      background: radial-gradient(ellipse at 50% 30%, #e0e7ff 60%, #c7d2fe 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .room-floor {
+      position: absolute;
+      left: 0; right: 0; bottom: 0;
+      height: 32vh;
+      background: linear-gradient(0deg, #b4b8d6 0%, #e0e7ff 100%);
+      z-index: 0;
+      border-top-left-radius: 60vw 10vh;
+      border-top-right-radius: 60vw 10vh;
+      box-shadow: 0 -8px 32px #6366f122 inset;
+      opacity: 0.85;
+    }
+    .room-shadow {
+      position: absolute;
+      left: 50%; bottom: 18vh;
+      width: 260px; height: 48px;
+      background: radial-gradient(ellipse at center, #6366f155 0%, #0000 80%);
+      transform: translateX(-50%) scaleY(1.1);
+      filter: blur(4px);
+      z-index: 2;
+      pointer-events: none;
+      opacity: 0.7;
+      transition: left 0.2s, width 0.2s, opacity 0.2s;
+    }
+    .login-3d-container {
+      perspective: 1600px;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 3;
+      position: relative;
+    }
+    .login-3d-box {
+      background: #e0e7ff;
+      border-radius: 32px;
+      box-shadow:
+        8px 8px 24px #b6b9d6,
+        -8px -8px 24px #fff,
+        0 1.5px 0 #fff4 inset,
+        0 0 0 1.5px #dbeafe;
+      border: none;
+      padding: 38px 24px 28px 24px;
+      min-width: 320px;
+      max-width: 92vw;
+      width: 350px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transform-style: preserve-3d;
+      animation: pop3d 1.1s cubic-bezier(.68,-0.55,.27,1.55);
+      position: relative;
+      transition: box-shadow 0.3s, transform 0.2s;
+      will-change: transform;
+      z-index: 10;
+      overflow: visible;
+    }
+    @keyframes pop3d {
+      0% { transform: rotateY(30deg) scale(0.7) translateY(60px); opacity: 0; }
+      80% { transform: rotateY(-8deg) scale(1.05) translateY(-8px); opacity: 1; }
+      100% { transform: rotateY(0deg) scale(1) translateY(0); opacity: 1; }
+    }
+    .logo-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      margin-bottom: 18px;
+      gap: 12px;
+    }
+    .click-here-txt {
+      color: #6366f1;
+      font-weight: 700;
+      font-size: 1em;
+      background: none;
+      border: none;
+      outline: none;
+      cursor: default;
+      padding: 0 8px 0 0;
+      user-select: none;
+      transition: opacity 0.3s;
+    }
+    .login-3d-logo {
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      background: #e0e7ff;
+      object-fit: cover;
+      border: 2px solid #dbeafe;
+      display: block;
+      box-shadow:
+        0 0 0 0 #6366f1,
+        0 0 16px 4px #818cf8cc,
+        4px 4px 12px #b6b9d6,
+        -4px -4px 12px #fff,
+        0 1.5px 0 #fff4 inset;
+      z-index: 2;
+      position: relative;
+      cursor: pointer;
+      transition: box-shadow 0.2s, transform 0.2s;
+      animation: logoGlow 1.2s infinite alternate;
+    }
+    @keyframes logoGlow {
+      0% { box-shadow:
+        0 0 0 0 #6366f1,
+        0 0 16px 4px #818cf8cc,
+        4px 4px 12px #b6b9d6,
+        -4px -4px 12px #fff,
+        0 1.5px 0 #fff4 inset;
+      }
+      100% { box-shadow:
+        0 0 0 8px #6366f1aa,
+        0 0 32px 12px #818cf8cc,
+        4px 4px 12px #b6b9d6,
+        -4px -4px 12px #fff,
+        0 1.5px 0 #fff4 inset;
+      }
+    }
+    .login-3d-logo:active {
+      box-shadow: 0 0 0 3px #6366f1aa;
+      transform: scale(0.96);
+    }
+    .login-3d-title {
+      font-size: 1.25em;
+      font-weight: 800;
+      color: #3730a3;
+      letter-spacing: .04em;
+      margin-bottom: 18px;
+      text-shadow:
+        0 2px 4px #b6b9d6,
+        0 1px 0 #fff8;
+      text-align: center;
+      z-index: 2;
+      position: relative;
+    }
+    .login-3d-fields {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-bottom: 18px;
+      align-items: center;
+    }
+    .login-3d-fields input[type="text"],
+    .login-3d-fields input[type="password"] {
+      width: 100%;
+      min-width: 0;
+      max-width: 100%;
+      box-sizing: border-box;
+      padding: 13px 16px;
+      border-radius: 12px;
+      border: none;
+      font-size: 1.08em;
+      background: #e0e7ff;
+      color: #222;
+      outline: none;
+      box-shadow:
+        4px 4px 12px #b6b9d6,
+        -4px -4px 12px #fff,
+        0 1.5px 0 #fff4 inset;
+      font-family: inherit;
+      font-weight: 500;
+      transition: box-shadow .2s, background .2s;
+      display: block;
+    }
+    .login-3d-fields input:focus {
+      background: #f1f5f9;
+      box-shadow:
+        2px 2px 6px #b6b9d6,
+        -2px -2px 6px #fff,
+        0 2px 8px #6366f122;
+    }
+    .login-3d-fields input[type="file"] {
+      margin-top: 4px;
+      font-size: 0.98em;
+      border: none;
+      background: none;
+      box-shadow: none;
+      color: #3730a3;
+    }
+    .profile-img-preview {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin: 8px auto 0 auto;
+      display: block;
+      border: 2px solid #dbeafe;
+      background: #f3f4f6;
+      box-shadow:
+        2px 2px 8px #b6b9d6,
+        -2px -2px 8px #fff;
+    }
+    .login-3d-btn {
+      margin-top: 8px;
+      width: 100%;
+      min-width: 0;
+      max-width: 100%;
+      box-sizing: border-box;
+      background: linear-gradient(90deg, #6366f1 10%, #818cf8 90%);
+      color: #fff;
+      border: none;
+      border-radius: 14px;
+      padding: 13px 0;
+      font-size: 1.12em;
+      font-weight: 700;
+      box-shadow:
+        4px 4px 12px #b6b9d6,
+        -4px -4px 12px #fff;
+      cursor: pointer;
+      opacity: 0.96;
+      letter-spacing: .04em;
+      transition: opacity .2s, box-shadow .2s, transform .1s;
+      display: block;
+    }
+    .login-3d-btn:active {
+      opacity: 1;
+      box-shadow:
+        2px 2px 6px #b6b9d6,
+        -2px -2px 6px #fff;
+      transform: scale(0.98);
+    }
+    .login-3d-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .login-3d-msg {
+      min-height: 20px;
+      text-align: center;
+      color: #3730a3;
+      font-weight: 600;
+      margin-top: 10px;
+      text-shadow: 0 2px 8px #b6b9d6;
+      letter-spacing: .02em;
+      font-size: 1em;
+      transition: color 0.2s;
+    }
+    .switch-link {
+      margin-top: 14px;
+      font-size: 0.98em;
+      color: #6366f1;
+      text-align: center;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+    .hide { display: none !important; }
+    /* Error highlight and shake */
+    .input-error {
+      box-shadow: 0 0 0 2px #dc2626, 4px 4px 12px #b6b9d6, -4px -4px 12px #fff, 0 1.5px 0 #fff4 inset !important;
+      background: #fee2e2 !important;
+      animation: shake 0.18s 2;
+    }
+    @keyframes shake {
+      0% { transform: translateX(0);}
+      25% { transform: translateX(-4px);}
+      50% { transform: translateX(4px);}
+      75% { transform: translateX(-4px);}
+      100% { transform: translateX(0);}
+    }
+    /* --- Popup styles --- */
+    .profile-popup {
+      position: fixed;
+      inset: 0;
+      background: rgba(30, 41, 59, 0.18);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.35s;
+    }
+    .profile-popup.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .popup-content {
+      position: relative;
+      background: #fff;
+      border-radius: 999px;
+      box-shadow: 0 8px 40px #3730a355;
+      width: 92vw;
+      max-width: 420px;
+      height: 70vh;
+      max-height: 520px;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      justify-content: flex-start;
+      opacity: 0;
+      transform: scale(0.3);
+      transition: opacity 0.45s cubic-bezier(.68,-0.55,.27,1.55), transform 0.45s cubic-bezier(.68,-0.55,.27,1.55), transform-origin 0s;
+      will-change: opacity, transform;
+    }
+    .profile-popup.open .popup-content {
+      opacity: 1;
+      transform: scale(1);
+      pointer-events: auto;
+    }
+    .popup-iframe {
+      flex: 1 1 auto;
+      border: none;
+      width: 100%;
+      height: 100%;
+      border-radius: 20px;
+      background: #f3f4f6;
+    }
+    .popup-close {
+      position: absolute;
+      top: 10px; left: 10px;
+      background: #fff;
+      border: none;
+      border-radius: 50%;
+      width: 38px; height: 38px;
+      box-shadow: 0 2px 8px #6366f122;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 2;
+      transition: background 0.2s;
+    }
+    .popup-close:hover {
+      background: #6366f1;
+    }
+    .popup-close svg path {
+      transition: stroke 0.2s;
+    }
+    .popup-close:hover svg path {
+      stroke: #fff;
+    }
+    @media (max-width: 500px) {
+      .login-3d-box { min-width: 90vw; width: 96vw; padding: 14px 2vw 10px 2vw;}
+      .login-3d-logo { width: 40px; height: 40px; }
+      .room-shadow { width: 120px; height: 22px; bottom: 14vh;}
+      .login-3d-fields input, .login-3d-btn { max-width: 100vw; }
+      .popup-content { max-width: 98vw; height: 80vh; }
+    }
+  </style>
+</head>
+<body>
+  <div class="room-floor"></div>
+  <div class="room-shadow"></div>
+  <div class="login-3d-container">
+    <!-- Signup Card -->
+    <form class="login-3d-box" id="signupCard" autocomplete="off" onsubmit="return false;">
+      <div class="logo-row">
+        <span class="click-here-txt" id="clickHereTxt">Click here</span>
+        <img src="zenstudy.jpg" class="login-3d-logo" alt="logo">
+      </div>
+      <div class="login-3d-title">Sign Up</div>
+      <div class="login-3d-fields">
+        <input type="text" id="signupUser" placeholder="Create username" autocomplete="off" required>
+        <input type="password" id="signupPass" placeholder="Create password (min 6 chars)" autocomplete="off" required>
+        <input type="file" id="profileImg" accept="image/*" required>
+        <img id="profileImgPreview" class="profile-img-preview" style="display:none;">
+      </div>
+      <div class="login-3d-msg" id="signupMsg"></div>
+      <button class="login-3d-btn" id="signupBtn" type="button" disabled>Sign Up</button>
+      <div class="switch-link" id="toLogin">Already have an account? Login</div>
+    </form>
+    <!-- Login Card -->
+    <form class="login-3d-box hide" id="loginCard" autocomplete="off" onsubmit="return false;">
+      <div class="logo-row">
+        <span class="click-here-txt" id="clickHereTxt2">Click here</span>
+        <img src="https://cdn-icons-png.flaticon.com/512/3135/3135755.png" class="login-3d-logo" alt="logo">
+      </div>
+      <div class="login-3d-title">Login</div>
+      <div class="login-3d-fields">
+        <input type="text" id="loginUser" placeholder="Username" autocomplete="off" required>
+        <input type="password" id="loginPass" placeholder="Password" autocomplete="off" required>
+      </div>
+      <div class="login-3d-msg" id="loginMsg"></div>
+      <button class="login-3d-btn" id="loginBtn" type="button" disabled>Login</button>
+      <div class="switch-link" id="toSignup">Don't have an account? Sign Up</div>
+    </form>
+  </div>
+  <!-- Popup Overlay -->
+  <div id="profilePopup" class="profile-popup">
+    <div class="popup-content">
+      <button class="popup-close" id="popupCloseBtn" aria-label="Close">
+        <!-- Left arrow SVG -->
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+          <path d="M20 24L12 16L20 8" stroke="#6366f1" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <iframe src="profinsta.html" frameborder="0" class="popup-iframe"></iframe>
+    </div>
+  </div>
+  <script>
+    // Vibration helper
+    function vibrate(ms=120) {
+      if (navigator.vibrate) navigator.vibrate(ms);
+    }
+
+    // Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyC9rehsf-0jkb9dAeT1-0Z1C-yRJ0YI9dA",
+      authDomain: "gymnm-ce84b.firebaseapp.com",
+      projectId: "gymnm-ce84b",
+      storageBucket: "gymnm-ce84b.appspot.com",
+      messagingSenderId: "474926929394",
+      appId: "1:474926929394:web:6abdb807caba2751a5c76b",
+      measurementId: "G-6R9S8LYZNF"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // 3D Card Animation: Mouse and Gyro
+    function setup3d(cardSelector, shadowSelector) {
+      const card = document.querySelector(cardSelector);
+      let targetX = 0, targetY = 0, currentX = 0, currentY = 0, usingGyro = false, animating = false;
+      let zeroGamma = null, zeroBeta = null;
+      card.addEventListener('mousemove', e => {
+        if (usingGyro) return;
+        const rect = card.getBoundingClientRect();
+        let mx = e.clientX - rect.left - rect.width/2;
+        let my = e.clientY - rect.top - rect.height/2;
+        targetX = mx/5;
+        targetY = -my/5;
+        if (!animating) animateCard();
+      });
+      card.addEventListener('mouseleave', () => {
+        if (usingGyro) return;
+        targetX = 0;
+        targetY = 0;
+        if (!animating) animateCard();
+      });
+      function handleOrientation(event) {
+        usingGyro = true;
+        let gamma = event.gamma || 0;
+        let beta = event.beta || 0;
+        if (zeroGamma === null || zeroBeta === null) {
+          zeroGamma = gamma;
+          zeroBeta = beta;
+        }
+        let dGamma = gamma - zeroGamma;
+        let dBeta = beta - zeroBeta;
+        dGamma = Math.max(-30, Math.min(30, dGamma));
+        dBeta = Math.max(-30, Math.min(30, dBeta));
+        targetX = dGamma * 1.2;
+        targetY = -dBeta * 1.2;
+        if (!animating) animateCard();
+      }
+      if (window.DeviceOrientationEvent) {
+        window.addEventListener('deviceorientation', handleOrientation, true);
+        card.addEventListener('mousemove', ()=>{
+          usingGyro = false;
+          zeroGamma = null; zeroBeta = null;
+        });
+      }
+      function animateCard() {
+        animating = true;
+        currentX += (targetX - currentX) * 0.14;
+        currentY += (targetY - currentY) * 0.14;
+        card.style.transform = `rotateY(${currentX}deg) rotateX(${currentY}deg) scale3d(1.08,1.08,1.08)`;
+        // Move the shadow under the card for realism
+        const shadow = document.querySelector(shadowSelector);
+        if (shadow) {
+          shadow.style.left = `calc(50% + ${-currentX*6}px)`;
+          shadow.style.width = `${260 - Math.abs(currentY*4)}px`;
+          shadow.style.opacity = `${0.7 - Math.abs(currentY/40)}`;
+        }
+        if (Math.abs(currentX-targetX) > 0.1 || Math.abs(currentY-targetY) > 0.1) {
+          requestAnimationFrame(animateCard);
+        } else {
+          animating = false;
+        }
+      }
+    }
+    setup3d('#signupCard', '.room-shadow');
+    setup3d('#loginCard', '.room-shadow');
+
+    // UI Switch
+    const signupCard = document.getElementById('signupCard');
+    const loginCard = document.getElementById('loginCard');
+    document.getElementById('toLogin').onclick = () => {
+      signupCard.classList.add('hide');
+      loginCard.classList.remove('hide');
+      document.getElementById('loginUser').focus();
+    };
+    document.getElementById('toSignup').onclick = () => {
+      loginCard.classList.add('hide');
+      signupCard.classList.remove('hide');
+      document.getElementById('signupUser').focus();
+    };
+
+    // Helper to re-shake
+    function reShake(field) {
+      field.classList.remove('input-error');
+      void field.offsetWidth;
+      field.classList.add('input-error');
+    }
+
+    // Signup logic
+    const signupUser = document.getElementById('signupUser');
+    const signupPass = document.getElementById('signupPass');
+    const signupBtn = document.getElementById('signupBtn');
+    const signupMsg = document.getElementById('signupMsg');
+    const profileImg = document.getElementById('profileImg');
+    const profileImgPreview = document.getElementById('profileImgPreview');
+    let profileImgBase64 = null;
+    let usernameTaken = false;
+
+    // Real-time username check
+    signupUser.oninput = async function() {
+      this.classList.remove('input-error');
+      signupMsg.textContent = "";
+      usernameTaken = false;
+      if (this.value.trim().length > 0) {
+        const doc = await db.collection("users").doc(this.value.trim()).get();
+        if (doc.exists) {
+          signupMsg.textContent = "❌ This username is already taken.";
+          signupMsg.style.color = "#dc2626";
+          signupUser.classList.add('input-error');
+          vibrate();
+          usernameTaken = true;
+        }
+      }
+      checkSignupFields();
+    };
+    signupPass.oninput = function() {
+      this.classList.remove('input-error');
+      signupMsg.textContent = "";
+      checkSignupFields();
+    };
+
+    profileImg.onchange = function(e) {
+      profileImg.classList.remove('input-error');
+      signupMsg.textContent = "";
+      const file = e.target.files[0];
+      if (!file) {
+        profileImgBase64 = null;
+        profileImgPreview.style.display = "none";
+        checkSignupFields();
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = function(ev) {
+        const img = new Image();
+        img.onload = function() {
+          // Compress to under 1MB, keep good quality
+          let quality = 0.92, maxSize = 1024;
+          let w = img.width, h = img.height;
+          if (w > maxSize || h > maxSize) {
+            if (w > h) { h = Math.round(h * maxSize / w); w = maxSize; }
+            else { w = Math.round(w * maxSize / h); h = maxSize; }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          let dataUrl = canvas.toDataURL('image/jpeg', quality);
+          // If still >1MB, reduce quality
+          while (dataUrl.length > 1024*1024 && quality > 0.5) {
+            quality -= 0.07;
+            dataUrl = canvas.toDataURL('image/jpeg', quality);
+          }
+          profileImgBase64 = dataUrl;
+          profileImgPreview.src = dataUrl;
+          profileImgPreview.style.display = "block";
+          checkSignupFields();
+        };
+        img.src = ev.target.result;
+      };
+      reader.readAsDataURL(file);
+    };
+
+    function checkSignupFields() {
+      if (usernameTaken) {
+        signupBtn.disabled = true;
+        return;
+      }
+      if (signupPass.value.length > 0 && signupPass.value.length < 6) {
+        signupBtn.disabled = true;
+        return;
+      }
+      if (!signupUser.value.trim() || signupPass.value.length < 6 || !profileImgBase64) {
+        signupBtn.disabled = true;
+        return;
+      }
+      signupMsg.textContent = "";
+      signupBtn.disabled = false;
+    }
+
+    signupBtn.onclick = async function() {
+      // Remove previous errors
+      signupUser.classList.remove('input-error');
+      signupPass.classList.remove('input-error');
+      profileImg.classList.remove('input-error');
+      signupMsg.textContent = "";
+
+      let errors = [];
+
+      // Username
+      let usernameValue = signupUser.value.trim();
+      if (!usernameValue) {
+        errors.push({field: signupUser, msg: "Username required."});
+      } else {
+        // Username taken
+        const docCheck = await db.collection("users").doc(usernameValue).get();
+        if (docCheck.exists) {
+          errors.push({field: signupUser, msg: "This username is already taken."});
+        }
+      }
+
+      // Password
+      if (!signupPass.value) {
+        errors.push({field: signupPass, msg: "Password required."});
+      } else if (signupPass.value.length < 6) {
+        errors.push({field: signupPass, msg: "Password must be at least 6 characters."});
+      }
+
+      // Image
+      if (!profileImgBase64) {
+        errors.push({field: profileImg, msg: "Profile image required."});
+      }
+
+      // If any errors, highlight all and vibrate
+      if (errors.length > 0) {
+        let errorMsgs = [];
+        errors.forEach(e => {
+          reShake(e.field);
+          errorMsgs.push("❌ " + e.msg);
+        });
+        signupMsg.textContent = errorMsgs.join(' ');
+        signupMsg.style.color = "#dc2626";
+        vibrate(120);
+        errors[0].field.focus();
+        return;
+      }
+
+      // Save to Firestore
+      await db.collection("users").doc(usernameValue).set({
+        pass: signupPass.value,
+        profileImg: profileImgBase64
+      });
+      localStorage.setItem('currentUser', usernameValue);
+      signupMsg.textContent = "✅ Signup successful! Logging in...";
+      signupMsg.style.color = "#16a34a";
+      setTimeout(() => window.location = "CODE2.html", 1200);
+    };
+
+    // Login logic
+    const loginUser = document.getElementById('loginUser');
+    const loginPass = document.getElementById('loginPass');
+    const loginBtn = document.getElementById('loginBtn');
+    const loginMsg = document.getElementById('loginMsg');
+
+    function checkLoginFields() {
+      loginBtn.disabled = !(loginUser.value.trim() && loginPass.value);
+    }
+    loginUser.oninput = loginPass.oninput = function() {
+      this.classList.remove('input-error');
+      loginMsg.textContent = "";
+      checkLoginFields();
+    };
+
+    loginBtn.onclick = async function() {
+      loginUser.classList.remove('input-error');
+      loginPass.classList.remove('input-error');
+      loginMsg.textContent = "";
+
+      let errors = [];
+
+      if (!loginUser.value.trim()) {
+        errors.push({field: loginUser, msg: "Username required."});
+      }
+      if (!loginPass.value) {
+        errors.push({field: loginPass, msg: "Password required."});
+      }
+
+      if (errors.length > 0) {
+        let errorMsgs = [];
+        errors.forEach(e => {
+          reShake(e.field);
+          errorMsgs.push("❌ " + e.msg);
+        });
+        loginMsg.textContent = errorMsgs.join(' ');
+        loginMsg.style.color = "#dc2626";
+        vibrate(120);
+        errors[0].field.focus();
+        return;
+      }
+
+      const doc = await db.collection("users").doc(loginUser.value.trim()).get();
+      if (!doc.exists || doc.data().pass !== loginPass.value) {
+        loginMsg.textContent = "❌ Invalid username or password.";
+        loginMsg.style.color = "#dc2626";
+        reShake(loginUser);
+        reShake(loginPass);
+        vibrate(120);
+        loginUser.focus();
+        return;
+      }
+      localStorage.setItem('currentUser', loginUser.value.trim());
+      loginMsg.textContent = "✅ Login successful! Redirecting...";
+      loginMsg.style.color = "#16a34a";
+      setTimeout(() => window.location = "CODE2.html", 1200);
+    };
+
+    setTimeout(() => signupUser.focus(), 400);
+
+    // --- Popup logic with shrink/fade to logo ---
+    const popup = document.getElementById('profilePopup');
+    const popupContent = popup.querySelector('.popup-content');
+    const popupCloseBtn = document.getElementById('popupCloseBtn');
+    const logoImgs = document.querySelectorAll('.login-3d-logo');
+    const clickHereTxts = [document.getElementById('clickHereTxt'), document.getElementById('clickHereTxt2')];
+
+    // Helper: get the center of the visible logo
+    function getLogoCenter() {
+      let logo = document.querySelector('.login-3d-logo:not(.hide)');
+      if (!logo) logo = document.querySelector('.login-3d-logo');
+      const rect = logo.getBoundingClientRect();
+      return {
+        x: rect.left + rect.width/2,
+        y: rect.top + rect.height/2
+      };
+    }
+
+    // Helper: set popup-content transform-origin to logo center
+    function setPopupOriginToLogo() {
+      const logoCenter = getLogoCenter();
+      const popupRect = popupContent.getBoundingClientRect();
+      const originX = logoCenter.x - popupRect.left;
+      const originY = logoCenter.y - popupRect.top;
+      popupContent.style.transformOrigin = `${originX}px ${originY}px`;
+    }
+
+    // Show popup with animation from logo
+    function openPopup() {
+      popup.classList.add('open');
+      setPopupOriginToLogo();
+      requestAnimationFrame(() => {
+        popupContent.style.opacity = '1';
+        popupContent.style.transform = 'scale(1)';
+      });
+    }
+
+    function closePopup() {
+      setPopupOriginToLogo();
+      popupContent.style.opacity = '0';
+      popupContent.style.transform = 'scale(0.3)';
+      setTimeout(() => {
+        popup.classList.remove('open');
+      }, 450);
+    }
+
+    // Logo click logic
+    logoImgs.forEach(logo => {
+      logo.style.cursor = 'pointer';
+      logo.addEventListener('click', () => {
+        // On first click, hide the "Click here" text
+        clickHereTxts.forEach(txt => txt.style.display = 'none');
+        if (popup.classList.contains('open')) {
+          closePopup();
+        } else {
+          openPopup();
+        }
+      });
+    });
+
+    popupCloseBtn.addEventListener('click', closePopup);
+
+    // Optional: close popup when clicking outside content
+    popup.addEventListener('click', e => {
+      if (e.target === popup) closePopup();
+    });
+
+    // When popup closes, reset style for next open
+    popup.addEventListener('transitionend', () => {
+      if (!popup.classList.contains('open')) {
+        popupContent.style.opacity = '0';
+        popupContent.style.transform = 'scale(0.3)';
+      }
+    });
+  </script>
+</body>
+        </html>
