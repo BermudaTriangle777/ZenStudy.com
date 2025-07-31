@@ -2,11 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Study App Auth</title>
+  <title>Study App Auth - Water Wave Mode Switch</title>
   <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
   <link href="https://fonts.googleapis.com/css?family=Inter:400,600&display=swap" rel="stylesheet">
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
   <style>
     html, body {
       height: 100%;
@@ -23,29 +21,323 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      transition: background 0.5s;
     }
+    #modeSwitchBtn {
+      position: fixed;
+      top: 22px;
+      right: 28px;
+      z-index: 1002;
+      background: #fff;
+      border-radius: 50%;
+      box-shadow: 0 2px 16px #6366f133, 0 0 0 2px #6366f1;
+      width: 54px; height: 54px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      transition: background 0.2s, box-shadow 0.2s;
+      user-select: none;
+    }
+    #modeSwitchBtn:hover {
+      background: #6366f1;
+    }
+    #modeSwitchBtn:hover svg circle {
+      fill: #fff;
+    }
+    #modeSwitchBtn:hover svg path {
+      stroke: #6366f1;
+    }
+    #modeSwitchIcon {
+      pointer-events: none;
+    }
+    /* --- Water Wave Transition Overlay --- */
+    #modeWave {
+      position: fixed;
+      left: 0; top: 0; width: 100vw; height: 100vh;
+      pointer-events: none;
+      z-index: 2000;
+      opacity: 0;
+      transition: opacity 0.3s;
+      will-change: opacity;
+    }
+    #modeWave svg {
+      width: 100vw;
+      height: 100vh;
+      display: block;
+      position: absolute;
+      left: 0; top: 0;
+      pointer-events: none;
+    }
+    /* --- Default (Light) Mode --- */
+    body {
+      --main-bg: #e0e7ff;
+      --main-bg2: #c7d2fe;
+      --floor-bg: #b4b8d6;
+      --floor-bg2: #e0e7ff;
+      --shadow: #6366f155;
+      --box-bg: #e0e7ff;
+      --box-shadow1: #b6b9d6;
+      --box-shadow2: #fff;
+      --box-shadow3: #fff4;
+      --box-shadow4: #dbeafe;
+      --logo-bg: #e0e7ff;
+      --logo-border: #dbeafe;
+      --logo-shadow1: #6366f1;
+      --logo-shadow2: #818cf8cc;
+      --logo-shadow3: #b6b9d6;
+      --logo-shadow4: #fff;
+      --logo-shadow5: #fff4;
+      --title: #3730a3;
+      --title-shadow1: #b6b9d6;
+      --title-shadow2: #fff8;
+      --input-bg: #e0e7ff;
+      --input-color: #222;
+      --input-shadow1: #b6b9d6;
+      --input-shadow2: #fff;
+      --input-shadow3: #fff4;
+      --input-focus-bg: #f1f5f9;
+      --input-focus-shadow1: #b6b9d6;
+      --input-focus-shadow2: #fff;
+      --input-focus-shadow3: #6366f122;
+      --btn-bg: linear-gradient(90deg, #6366f1 10%, #818cf8 90%);
+      --btn-color: #fff;
+      --btn-shadow1: #b6b9d6;
+      --btn-shadow2: #fff;
+      --msg: #3730a3;
+      --msg-shadow: #b6b9d6;
+      --switch-link: #6366f1;
+      --profile-border: #dbeafe;
+      --profile-bg: #f3f4f6;
+      --profile-shadow1: #b6b9d6;
+      --profile-shadow2: #fff;
+      --popup-bg: #fff;
+      --popup-shadow: #3730a355;
+      --popup-close-bg: #fff;
+      --popup-close-shadow: #6366f122;
+      --popup-close-hover-bg: #6366f1;
+      --popup-close-path: #6366f1;
+      --popup-close-hover-path: #fff;
+      --click-here: #6366f1;
+      --click-here-bg: none;
+      --click-here-weight: 700;
+      --click-here-size: 1em;
+      --click-here-cursor: default;
+      --click-here-padding: 0 8px 0 0;
+    }
+    /* --- Neomorphic Realistic Dark Mode --- */
+    body.dark-mode {
+      background:
+        linear-gradient(120deg, #181c2f 60%, #23243a 100%),
+        url('https://www.transparenttextures.com/patterns/diamond-upholstery.png');
+      --main-bg: #1a1d2b;
+      --main-bg2: #23243a;
+      --floor-bg: #23243a;
+      --floor-bg2: #181c2f;
+      --shadow: #23243aee;
+      --box-bg: #202233;
+      --box-shadow1: 12px 12px 32px #151624cc, -12px -12px 32px #23243a99, 0 1.5px 0 #2d2e4a inset, 0 0 0 2px #2d2e4a;
+      --box-shadow2: 0 0 0 0 transparent;
+      --box-shadow3: 0 1.5px 0 #23243a inset;
+      --box-shadow4: 0 0 0 2px #6366f1;
+      --logo-bg: #23243a;
+      --logo-border: #6366f1;
+      --logo-shadow1: #6366f1;
+      --logo-shadow2: #818cf8cc;
+      --logo-shadow3: #181c2f;
+      --logo-shadow4: #23243a;
+      --logo-shadow5: #23243a;
+      --title: #c7d2fe;
+      --title-shadow1: #6366f1;
+      --title-shadow2: #23243a;
+      --input-bg: #23243a;
+      --input-color: #e0e7ff;
+      --input-shadow1: 6px 6px 16px #181c2f, -6px -6px 16px #23243a;
+      --input-shadow2: 0 1.5px 0 #6366f1 inset;
+      --input-shadow3: 0 0 0 2px #6366f1;
+      --input-focus-bg: #1a1d2b;
+      --input-focus-shadow1: 0 0 0 2px #818cf8;
+      --input-focus-shadow2: 0 0 0 4px #6366f122;
+      --input-focus-shadow3: 0 0 0 2px #6366f1;
+      --btn-bg: linear-gradient(90deg, #6366f1 10%, #818cf8 90%);
+      --btn-color: #fff;
+      --btn-shadow1: 6px 6px 16px #181c2f, -6px -6px 16px #23243a;
+      --btn-shadow2: 0 0 0 2px #6366f1;
+      --msg: #a5b4fc;
+      --msg-shadow: #6366f1;
+      --switch-link: #a5b4fc;
+      --profile-border: #6366f1;
+      --profile-bg: #23243a;
+      --profile-shadow1: 2px 2px 8px #181c2f;
+      --profile-shadow2: -2px -2px 8px #23243a;
+      --popup-bg: rgba(32,34,51,0.95);
+      --popup-shadow: 0 8px 40px #181c2f99, 0 0 0 2px #6366f1;
+      --popup-close-bg: #181c2f;
+      --popup-close-shadow: 0 2px 8px #6366f1;
+      --popup-close-hover-bg: #6366f1;
+      --popup-close-path: #a5b4fc;
+      --popup-close-hover-path: #fff;
+      --click-here: #a5b4fc;
+      --click-here-bg: none;
+      --click-here-weight: 700;
+      --click-here-size: 1em;
+      --click-here-cursor: default;
+      --click-here-padding: 0 8px 0 0;
+    }
+    /* Neomorphic box shadow for cards */
+    body.dark-mode .login-3d-box {
+      background: var(--box-bg);
+      border-radius: 32px;
+      box-shadow:
+        0 2px 24px 0 #181c2f,
+        0 8px 48px 0 #23243a99,
+        0 0 0 2px #6366f1;
+      border: none;
+      transition: box-shadow 0.3s, background 0.5s;
+    }
+    /* Neomorphic input fields */
+    body.dark-mode .login-3d-fields input[type="text"],
+    body.dark-mode .login-3d-fields input[type="password"] {
+      background: var(--input-bg);
+      color: var(--input-color);
+      box-shadow:
+        0 2px 8px #181c2f,
+        0 1.5px 0 #6366f1 inset;
+      border-radius: 14px;
+      border: none;
+      transition: box-shadow 0.2s, background 0.2s, color 0.5s;
+    }
+    /* Neomorphic button */
+    body.dark-mode .login-3d-btn {
+      box-shadow:
+        6px 6px 16px #181c2f,
+        -6px -6px 16px #23243a,
+        0 0 0 2px #6366f1;
+      border-radius: 16px;
+      background: var(--btn-bg);
+      color: var(--btn-color);
+      transition: box-shadow 0.2s, background 0.5s, color 0.5s;
+    }
+    /* Glassy popup */
+    body.dark-mode .popup-content {
+      background: var(--popup-bg);
+      box-shadow: 0 8px 40px #181c2f99, 0 0 0 2px #6366f1;
+      backdrop-filter: blur(8px) saturate(1.2);
+      border-radius: 32px;
+    }
+    /* Add a subtle noise overlay for realism */
+    body.dark-mode::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.13;
+      background: url('https://www.transparenttextures.com/patterns/diamond-upholstery.png');
+      mix-blend-mode: soft-light;
+    }
+    /* Softer shadow for the floor */
+    body.dark-mode .room-floor {
+      box-shadow: 0 -8px 32px #23243aee inset;
+      background: linear-gradient(0deg, #23243a 0%, #181c2f 100%);
+    }
+    /* Softer shadow for the card shadow */
+    body.dark-mode .room-shadow {
+      background: radial-gradient(ellipse at center, #6366f1cc 0%, #0000 80%);
+      filter: blur(8px);
+      opacity: 0.5;
+    }
+    /* --- Glowing Logo --- */
+    .login-3d-logo {
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      background: var(--logo-bg);
+      object-fit: cover;
+      border: 2px solid var(--logo-border);
+      display: block;
+      box-shadow:
+        0 0 0 0 var(--logo-shadow1),
+        0 0 16px 4px var(--logo-shadow2),
+        4px 4px 12px var(--logo-shadow3),
+        -4px -4px 12px var(--logo-shadow4),
+        0 1.5px 0 var(--logo-shadow5) inset;
+      z-index: 2;
+      position: relative;
+      cursor: pointer;
+      transition: box-shadow 0.2s, transform 0.2s, background 0.5s, border 0.5s;
+      animation: logoGlow 1.2s infinite alternate;
+    }
+    @keyframes logoGlow {
+      0% {
+        box-shadow:
+          0 0 0 0 var(--logo-shadow1),
+          0 0 16px 4px var(--logo-shadow2),
+          4px 4px 12px var(--logo-shadow3),
+          -4px -4px 12px var(--logo-shadow4),
+          0 1.5px 0 var(--logo-shadow5) inset;
+      }
+      100% {
+        box-shadow:
+          0 0 0 12px var(--logo-shadow1),
+          0 0 32px 16px var(--logo-shadow2),
+          4px 4px 12px var(--logo-shadow3),
+          -4px -4px 12px var(--logo-shadow4),
+          0 1.5px 0 var(--logo-shadow5) inset;
+      }
+    }
+    body.dark-mode .login-3d-logo {
+      box-shadow:
+        0 0 0 0 #6366f1,
+        0 0 32px 8px #6366f1cc,
+        0 0 64px 24px #818cf8cc,
+        4px 4px 16px #181c2f,
+        -4px -4px 16px #23243a,
+        0 1.5px 0 #23243a inset;
+      animation: logoGlowDark 1.4s infinite alternate;
+    }
+    @keyframes logoGlowDark {
+      0% {
+        box-shadow:
+          0 0 0 0 #6366f1,
+          0 0 32px 8px #6366f1cc,
+          0 0 64px 24px #818cf8cc,
+          4px 4px 16px #181c2f,
+          -4px -4px 16px #23243a,
+          0 1.5px 0 #23243a inset;
+      }
+      100% {
+        box-shadow:
+          0 0 0 18px #6366f1,
+          0 0 64px 32px #6366f1cc,
+          0 0 128px 48px #818cf8cc,
+          4px 4px 16px #181c2f,
+          -4px -4px 16px #23243a,
+          0 1.5px 0 #23243a inset;
+      }
+    }
+    /* --- Shared Styles using CSS Variables --- */
     .room-floor {
       position: absolute;
       left: 0; right: 0; bottom: 0;
       height: 32vh;
-      background: linear-gradient(0deg, #b4b8d6 0%, #e0e7ff 100%);
+      background: linear-gradient(0deg, var(--floor-bg) 0%, var(--floor-bg2) 100%);
       z-index: 0;
       border-top-left-radius: 60vw 10vh;
       border-top-right-radius: 60vw 10vh;
-      box-shadow: 0 -8px 32px #6366f122 inset;
+      box-shadow: 0 -8px 32px var(--shadow) inset;
       opacity: 0.85;
+      transition: background 0.5s, box-shadow 0.5s;
     }
     .room-shadow {
       position: absolute;
       left: 50%; bottom: 18vh;
       width: 260px; height: 48px;
-      background: radial-gradient(ellipse at center, #6366f155 0%, #0000 80%);
+      background: radial-gradient(ellipse at center, var(--shadow) 0%, #0000 80%);
       transform: translateX(-50%) scaleY(1.1);
       filter: blur(4px);
       z-index: 2;
       pointer-events: none;
       opacity: 0.7;
-      transition: left 0.2s, width 0.2s, opacity 0.2s;
+      transition: left 0.2s, width 0.2s, opacity 0.2s, background 0.5s;
     }
     .login-3d-container {
       perspective: 1600px;
@@ -58,13 +350,13 @@
       position: relative;
     }
     .login-3d-box {
-      background: #e0e7ff;
+      background: var(--box-bg);
       border-radius: 32px;
       box-shadow:
-        8px 8px 24px #b6b9d6,
-        -8px -8px 24px #fff,
-        0 1.5px 0 #fff4 inset,
-        0 0 0 1.5px #dbeafe;
+        8px 8px 24px var(--box-shadow1),
+        -8px -8px 24px var(--box-shadow2),
+        0 1.5px 0 var(--box-shadow3) inset,
+        0 0 0 1.5px var(--box-shadow4);
       border: none;
       padding: 38px 24px 28px 24px;
       min-width: 320px;
@@ -76,7 +368,7 @@
       transform-style: preserve-3d;
       animation: pop3d 1.1s cubic-bezier(.68,-0.55,.27,1.55);
       position: relative;
-      transition: box-shadow 0.3s, transform 0.2s;
+      transition: box-shadow 0.3s, transform 0.2s, background 0.5s;
       will-change: transform;
       z-index: 10;
       overflow: visible;
@@ -95,69 +387,30 @@
       gap: 12px;
     }
     .click-here-txt {
-      color: #6366f1;
-      font-weight: 700;
-      font-size: 1em;
-      background: none;
+      color: var(--click-here);
+      font-weight: var(--click-here-weight);
+      font-size: var(--click-here-size);
+      background: var(--click-here-bg);
       border: none;
       outline: none;
-      cursor: default;
-      padding: 0 8px 0 0;
+      cursor: var(--click-here-cursor);
+      padding: var(--click-here-padding);
       user-select: none;
-      transition: opacity 0.3s;
-    }
-    .login-3d-logo {
-      width: 56px;
-      height: 56px;
-      border-radius: 16px;
-      background: #e0e7ff;
-      object-fit: cover;
-      border: 2px solid #dbeafe;
-      display: block;
-      box-shadow:
-        0 0 0 0 #6366f1,
-        0 0 16px 4px #818cf8cc,
-        4px 4px 12px #b6b9d6,
-        -4px -4px 12px #fff,
-        0 1.5px 0 #fff4 inset;
-      z-index: 2;
-      position: relative;
-      cursor: pointer;
-      transition: box-shadow 0.2s, transform 0.2s;
-      animation: logoGlow 1.2s infinite alternate;
-    }
-    @keyframes logoGlow {
-      0% { box-shadow:
-        0 0 0 0 #6366f1,
-        0 0 16px 4px #818cf8cc,
-        4px 4px 12px #b6b9d6,
-        -4px -4px 12px #fff,
-        0 1.5px 0 #fff4 inset;
-      }
-      100% { box-shadow:
-        0 0 0 8px #6366f1aa,
-        0 0 32px 12px #818cf8cc,
-        4px 4px 12px #b6b9d6,
-        -4px -4px 12px #fff,
-        0 1.5px 0 #fff4 inset;
-      }
-    }
-    .login-3d-logo:active {
-      box-shadow: 0 0 0 3px #6366f1aa;
-      transform: scale(0.96);
+      transition: opacity 0.3s, color 0.5s;
     }
     .login-3d-title {
       font-size: 1.25em;
       font-weight: 800;
-      color: #3730a3;
+      color: var(--title);
       letter-spacing: .04em;
       margin-bottom: 18px;
       text-shadow:
-        0 2px 4px #b6b9d6,
-        0 1px 0 #fff8;
+        0 2px 4px var(--title-shadow1),
+        0 1px 0 var(--title-shadow2);
       text-align: center;
       z-index: 2;
       position: relative;
+      transition: color 0.5s, text-shadow 0.5s;
     }
     .login-3d-fields {
       width: 100%;
@@ -177,24 +430,24 @@
       border-radius: 12px;
       border: none;
       font-size: 1.08em;
-      background: #e0e7ff;
-      color: #222;
+      background: var(--input-bg);
+      color: var(--input-color);
       outline: none;
       box-shadow:
-        4px 4px 12px #b6b9d6,
-        -4px -4px 12px #fff,
-        0 1.5px 0 #fff4 inset;
+        4px 4px 12px var(--input-shadow1),
+        -4px -4px 12px var(--input-shadow2),
+        0 1.5px 0 var(--input-shadow3) inset;
       font-family: inherit;
       font-weight: 500;
-      transition: box-shadow .2s, background .2s;
+      transition: box-shadow .2s, background .2s, color 0.5s;
       display: block;
     }
     .login-3d-fields input:focus {
-      background: #f1f5f9;
+      background: var(--input-focus-bg);
       box-shadow:
-        2px 2px 6px #b6b9d6,
-        -2px -2px 6px #fff,
-        0 2px 8px #6366f122;
+        2px 2px 6px var(--input-focus-shadow1),
+        -2px -2px 6px var(--input-focus-shadow2),
+        0 2px 8px var(--input-focus-shadow3);
     }
     .login-3d-fields input[type="file"] {
       margin-top: 4px;
@@ -202,7 +455,7 @@
       border: none;
       background: none;
       box-shadow: none;
-      color: #3730a3;
+      color: var(--title);
     }
     .profile-img-preview {
       width: 70px;
@@ -211,11 +464,12 @@
       object-fit: cover;
       margin: 8px auto 0 auto;
       display: block;
-      border: 2px solid #dbeafe;
-      background: #f3f4f6;
+      border: 2px solid var(--profile-border);
+      background: var(--profile-bg);
       box-shadow:
-        2px 2px 8px #b6b9d6,
-        -2px -2px 8px #fff;
+        2px 2px 8px var(--profile-shadow1),
+        -2px -2px 8px var(--profile-shadow2);
+      transition: border 0.5s, background 0.5s;
     }
     .login-3d-btn {
       margin-top: 8px;
@@ -223,27 +477,27 @@
       min-width: 0;
       max-width: 100%;
       box-sizing: border-box;
-      background: linear-gradient(90deg, #6366f1 10%, #818cf8 90%);
-      color: #fff;
+      background: var(--btn-bg);
+      color: var(--btn-color);
       border: none;
       border-radius: 14px;
       padding: 13px 0;
       font-size: 1.12em;
       font-weight: 700;
       box-shadow:
-        4px 4px 12px #b6b9d6,
-        -4px -4px 12px #fff;
+        4px 4px 12px var(--btn-shadow1),
+        -4px -4px 12px var(--btn-shadow2);
       cursor: pointer;
       opacity: 0.96;
       letter-spacing: .04em;
-      transition: opacity .2s, box-shadow .2s, transform .1s;
+      transition: opacity .2s, box-shadow .2s, transform .1s, background 0.5s, color 0.5s;
       display: block;
     }
     .login-3d-btn:active {
       opacity: 1;
       box-shadow:
-        2px 2px 6px #b6b9d6,
-        -2px -2px 6px #fff;
+        2px 2px 6px var(--btn-shadow1),
+        -2px -2px 6px var(--btn-shadow2);
       transform: scale(0.98);
     }
     .login-3d-btn:disabled {
@@ -253,10 +507,10 @@
     .login-3d-msg {
       min-height: 20px;
       text-align: center;
-      color: #3730a3;
+      color: var(--msg);
       font-weight: 600;
       margin-top: 10px;
-      text-shadow: 0 2px 8px #b6b9d6;
+      text-shadow: 0 2px 8px var(--msg-shadow);
       letter-spacing: .02em;
       font-size: 1em;
       transition: color 0.2s;
@@ -264,15 +518,15 @@
     .switch-link {
       margin-top: 14px;
       font-size: 0.98em;
-      color: #6366f1;
+      color: var(--switch-link);
       text-align: center;
       cursor: pointer;
       text-decoration: underline;
+      transition: color 0.5s;
     }
     .hide { display: none !important; }
-    /* Error highlight and shake */
     .input-error {
-      box-shadow: 0 0 0 2px #dc2626, 4px 4px 12px #b6b9d6, -4px -4px 12px #fff, 0 1.5px 0 #fff4 inset !important;
+      box-shadow: 0 0 0 2px #dc2626, 4px 4px 12px var(--box-shadow1), -4px -4px 12px var(--box-shadow2), 0 1.5px 0 var(--box-shadow3) inset !important;
       background: #fee2e2 !important;
       animation: shake 0.18s 2;
     }
@@ -283,7 +537,6 @@
       75% { transform: translateX(-4px);}
       100% { transform: translateX(0);}
     }
-    /* --- Popup styles --- */
     .profile-popup {
       position: fixed;
       inset: 0;
@@ -302,9 +555,9 @@
     }
     .popup-content {
       position: relative;
-      background: #fff;
+      background: var(--popup-bg);
       border-radius: 999px;
-      box-shadow: 0 8px 40px #3730a355;
+      box-shadow: 0 8px 40px var(--popup-shadow);
       width: 92vw;
       max-width: 420px;
       height: 70vh;
@@ -334,11 +587,11 @@
     .popup-close {
       position: absolute;
       top: 10px; left: 10px;
-      background: #fff;
+      background: var(--popup-close-bg);
       border: none;
       border-radius: 50%;
       width: 38px; height: 38px;
-      box-shadow: 0 2px 8px #6366f122;
+      box-shadow: 0 2px 8px var(--popup-close-shadow);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -347,13 +600,14 @@
       transition: background 0.2s;
     }
     .popup-close:hover {
-      background: #6366f1;
+      background: var(--popup-close-hover-bg);
     }
     .popup-close svg path {
       transition: stroke 0.2s;
+      stroke: var(--popup-close-path);
     }
     .popup-close:hover svg path {
-      stroke: #fff;
+      stroke: var(--popup-close-hover-path);
     }
     @media (max-width: 500px) {
       .login-3d-box { min-width: 90vw; width: 96vw; padding: 14px 2vw 10px 2vw;}
@@ -365,6 +619,13 @@
   </style>
 </head>
 <body>
+  <div id="modeSwitchBtn" title="Switch UI Mode">
+    <svg id="modeSwitchIcon" width="32" height="32" viewBox="0 0 32 32">
+      <circle cx="16" cy="16" r="14" fill="#6366f1" stroke="#fff" stroke-width="2"/>
+      <path d="M16 8v8l6 4" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </div>
+  <div id="modeWave"></div>
   <div class="room-floor"></div>
   <div class="room-shadow"></div>
   <div class="login-3d-container">
@@ -372,9 +633,9 @@
     <form class="login-3d-box" id="signupCard" autocomplete="off" onsubmit="return false;">
       <div class="logo-row">
         <span class="click-here-txt" id="clickHereTxt">Click here</span>
-        <img src="zenstudy.jpg" class="login-3d-logo" alt="logo">
+        <img src="Zenstudy.jpg" class="login-3d-logo" alt="logo">
       </div>
-      <div class="login-3d-title">Sign Up</div>
+      <div class="login-3d-title" id="signupTitle">Sign Up</div>
       <div class="login-3d-fields">
         <input type="text" id="signupUser" placeholder="Create username" autocomplete="off" required>
         <input type="password" id="signupPass" placeholder="Create password (min 6 chars)" autocomplete="off" required>
@@ -391,7 +652,7 @@
         <span class="click-here-txt" id="clickHereTxt2">Click here</span>
         <img src="https://cdn-icons-png.flaticon.com/512/3135/3135755.png" class="login-3d-logo" alt="logo">
       </div>
-      <div class="login-3d-title">Login</div>
+      <div class="login-3d-title" id="loginTitle">Login</div>
       <div class="login-3d-fields">
         <input type="text" id="loginUser" placeholder="Username" autocomplete="off" required>
         <input type="password" id="loginPass" placeholder="Password" autocomplete="off" required>
@@ -405,34 +666,101 @@
   <div id="profilePopup" class="profile-popup">
     <div class="popup-content">
       <button class="popup-close" id="popupCloseBtn" aria-label="Close">
-        <!-- Left arrow SVG -->
         <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
           <path d="M20 24L12 16L20 8" stroke="#6366f1" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </button>
-      <iframe src="profinsta.html" frameborder="0" class="popup-iframe"></iframe>
+      <iframe src="help.html" frameborder="0" class="popup-iframe"></iframe>
     </div>
   </div>
   <script>
-    // Vibration helper
-    function vibrate(ms=120) {
-      if (navigator.vibrate) navigator.vibrate(ms);
+    // --- Water Wave Mode Switcher ---
+    const modeSwitchBtn = document.getElementById('modeSwitchBtn');
+    const modeSwitchIcon = document.getElementById('modeSwitchIcon');
+    const modeWave = document.getElementById('modeWave');
+    // Only two modes: Default and Modern Dark
+    const modes = [
+      {
+        class: "",
+        color: "#6366f1",
+        tooltip: "Switch to Dark Mode"
+      },
+      {
+        class: "dark-mode",
+        color: "#818cf8",
+        tooltip: "Switch to Light Mode"
+      }
+    ];
+    let modeIndex = 0;
+    function setMode(idx) {
+      document.body.classList.remove("dark-mode");
+      if (modes[idx].class) document.body.classList.add(modes[idx].class);
+      // Update button color/icon/tooltip
+      modeSwitchBtn.title = modes[idx].tooltip;
+      modeSwitchIcon.querySelector("circle").setAttribute("fill", modes[idx].color);
     }
+    setMode(0);
 
-    // Firebase config
-    const firebaseConfig = {
-      apiKey: "AIzaSyC9rehsf-0jkb9dAeT1-0Z1C-yRJ0YI9dA",
-      authDomain: "gymnm-ce84b.firebaseapp.com",
-      projectId: "gymnm-ce84b",
-      storageBucket: "gymnm-ce84b.appspot.com",
-      messagingSenderId: "474926929394",
-      appId: "1:474926929394:web:6abdb807caba2751a5c76b",
-      measurementId: "G-6R9S8LYZNF"
+    // Water wave transition
+    function waterWaveTransition(nextModeIdx, e) {
+      // Get button center
+      const btnRect = modeSwitchBtn.getBoundingClientRect();
+      const cx = btnRect.left + btnRect.width/2;
+      const cy = btnRect.top + btnRect.height/2;
+      // Calculate max radius to cover screen
+      const maxDist = Math.max(
+        Math.hypot(cx, cy),
+        Math.hypot(window.innerWidth-cx, cy),
+        Math.hypot(cx, window.innerHeight-cy),
+        Math.hypot(window.innerWidth-cx, window.innerHeight-cy)
+      );
+      // SVG wave path (wavy edge)
+      function wavePath(r, waviness=18, waves=8) {
+        let d = "";
+        for (let i=0; i<=360; i+=2) {
+          const rad = i * Math.PI/180;
+          const wave = Math.sin(rad*waves) * waviness;
+          const x = cx + (r+wave) * Math.cos(rad);
+          const y = cy + (r+wave) * Math.sin(rad);
+          d += (i===0 ? "M":"L") + x + "," + y + " ";
+        }
+        d += "Z";
+        return d;
+      }
+      // Create SVG
+      modeWave.innerHTML = `
+        <svg>
+          <path id="wavePath" fill="${nextModeIdx===1 ? '#6366f1' : '#fff'}" fill-opacity="0.92"/>
+        </svg>
+      `;
+      modeWave.style.opacity = "1";
+      const path = document.getElementById("wavePath");
+      // Animate wave
+      let r = 0, step = 0;
+      const totalSteps = 38;
+      function animateWave() {
+        r = (step/totalSteps) * (maxDist+120);
+        path.setAttribute("d", wavePath(r));
+        if (step === Math.floor(totalSteps/2)) {
+          setMode(nextModeIdx);
+        }
+        if (step < totalSteps) {
+          step++;
+          requestAnimationFrame(animateWave);
+        } else {
+          setTimeout(()=>{
+            modeWave.style.opacity = "0";
+          }, 180);
+        }
+      }
+      animateWave();
+    }
+    modeSwitchBtn.onclick = function(e) {
+      modeIndex = (modeIndex + 1) % modes.length;
+      waterWaveTransition(modeIndex, e);
     };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
 
-    // 3D Card Animation: Mouse and Gyro
+    // --- 3D Card Animation: Mouse and Gyro ---
     function setup3d(cardSelector, shadowSelector) {
       const card = document.querySelector(cardSelector);
       let targetX = 0, targetY = 0, currentX = 0, currentY = 0, usingGyro = false, animating = false;
@@ -480,7 +808,6 @@
         currentX += (targetX - currentX) * 0.14;
         currentY += (targetY - currentY) * 0.14;
         card.style.transform = `rotateY(${currentX}deg) rotateX(${currentY}deg) scale3d(1.08,1.08,1.08)`;
-        // Move the shadow under the card for realism
         const shadow = document.querySelector(shadowSelector);
         if (shadow) {
           shadow.style.left = `calc(50% + ${-currentX*6}px)`;
@@ -511,221 +838,6 @@
       document.getElementById('signupUser').focus();
     };
 
-    // Helper to re-shake
-    function reShake(field) {
-      field.classList.remove('input-error');
-      void field.offsetWidth;
-      field.classList.add('input-error');
-    }
-
-    // Signup logic
-    const signupUser = document.getElementById('signupUser');
-    const signupPass = document.getElementById('signupPass');
-    const signupBtn = document.getElementById('signupBtn');
-    const signupMsg = document.getElementById('signupMsg');
-    const profileImg = document.getElementById('profileImg');
-    const profileImgPreview = document.getElementById('profileImgPreview');
-    let profileImgBase64 = null;
-    let usernameTaken = false;
-
-    // Real-time username check
-    signupUser.oninput = async function() {
-      this.classList.remove('input-error');
-      signupMsg.textContent = "";
-      usernameTaken = false;
-      if (this.value.trim().length > 0) {
-        const doc = await db.collection("users").doc(this.value.trim()).get();
-        if (doc.exists) {
-          signupMsg.textContent = "❌ This username is already taken.";
-          signupMsg.style.color = "#dc2626";
-          signupUser.classList.add('input-error');
-          vibrate();
-          usernameTaken = true;
-        }
-      }
-      checkSignupFields();
-    };
-    signupPass.oninput = function() {
-      this.classList.remove('input-error');
-      signupMsg.textContent = "";
-      checkSignupFields();
-    };
-
-    profileImg.onchange = function(e) {
-      profileImg.classList.remove('input-error');
-      signupMsg.textContent = "";
-      const file = e.target.files[0];
-      if (!file) {
-        profileImgBase64 = null;
-        profileImgPreview.style.display = "none";
-        checkSignupFields();
-        return;
-      }
-      const reader = new FileReader();
-      reader.onload = function(ev) {
-        const img = new Image();
-        img.onload = function() {
-          // Compress to under 1MB, keep good quality
-          let quality = 0.92, maxSize = 1024;
-          let w = img.width, h = img.height;
-          if (w > maxSize || h > maxSize) {
-            if (w > h) { h = Math.round(h * maxSize / w); w = maxSize; }
-            else { w = Math.round(w * maxSize / h); h = maxSize; }
-          }
-          const canvas = document.createElement('canvas');
-          canvas.width = w; canvas.height = h;
-          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-          let dataUrl = canvas.toDataURL('image/jpeg', quality);
-          // If still >1MB, reduce quality
-          while (dataUrl.length > 1024*1024 && quality > 0.5) {
-            quality -= 0.07;
-            dataUrl = canvas.toDataURL('image/jpeg', quality);
-          }
-          profileImgBase64 = dataUrl;
-          profileImgPreview.src = dataUrl;
-          profileImgPreview.style.display = "block";
-          checkSignupFields();
-        };
-        img.src = ev.target.result;
-      };
-      reader.readAsDataURL(file);
-    };
-
-    function checkSignupFields() {
-      if (usernameTaken) {
-        signupBtn.disabled = true;
-        return;
-      }
-      if (signupPass.value.length > 0 && signupPass.value.length < 6) {
-        signupBtn.disabled = true;
-        return;
-      }
-      if (!signupUser.value.trim() || signupPass.value.length < 6 || !profileImgBase64) {
-        signupBtn.disabled = true;
-        return;
-      }
-      signupMsg.textContent = "";
-      signupBtn.disabled = false;
-    }
-
-    signupBtn.onclick = async function() {
-      // Remove previous errors
-      signupUser.classList.remove('input-error');
-      signupPass.classList.remove('input-error');
-      profileImg.classList.remove('input-error');
-      signupMsg.textContent = "";
-
-      let errors = [];
-
-      // Username
-      let usernameValue = signupUser.value.trim();
-      if (!usernameValue) {
-        errors.push({field: signupUser, msg: "Username required."});
-      } else {
-        // Username taken
-        const docCheck = await db.collection("users").doc(usernameValue).get();
-        if (docCheck.exists) {
-          errors.push({field: signupUser, msg: "This username is already taken."});
-        }
-      }
-
-      // Password
-      if (!signupPass.value) {
-        errors.push({field: signupPass, msg: "Password required."});
-      } else if (signupPass.value.length < 6) {
-        errors.push({field: signupPass, msg: "Password must be at least 6 characters."});
-      }
-
-      // Image
-      if (!profileImgBase64) {
-        errors.push({field: profileImg, msg: "Profile image required."});
-      }
-
-      // If any errors, highlight all and vibrate
-      if (errors.length > 0) {
-        let errorMsgs = [];
-        errors.forEach(e => {
-          reShake(e.field);
-          errorMsgs.push("❌ " + e.msg);
-        });
-        signupMsg.textContent = errorMsgs.join(' ');
-        signupMsg.style.color = "#dc2626";
-        vibrate(120);
-        errors[0].field.focus();
-        return;
-      }
-
-      // Save to Firestore
-      await db.collection("users").doc(usernameValue).set({
-        pass: signupPass.value,
-        profileImg: profileImgBase64
-      });
-      localStorage.setItem('currentUser', usernameValue);
-      signupMsg.textContent = "✅ Signup successful! Logging in...";
-      signupMsg.style.color = "#16a34a";
-      setTimeout(() => window.location = "CODE2.html", 1200);
-    };
-
-    // Login logic
-    const loginUser = document.getElementById('loginUser');
-    const loginPass = document.getElementById('loginPass');
-    const loginBtn = document.getElementById('loginBtn');
-    const loginMsg = document.getElementById('loginMsg');
-
-    function checkLoginFields() {
-      loginBtn.disabled = !(loginUser.value.trim() && loginPass.value);
-    }
-    loginUser.oninput = loginPass.oninput = function() {
-      this.classList.remove('input-error');
-      loginMsg.textContent = "";
-      checkLoginFields();
-    };
-
-    loginBtn.onclick = async function() {
-      loginUser.classList.remove('input-error');
-      loginPass.classList.remove('input-error');
-      loginMsg.textContent = "";
-
-      let errors = [];
-
-      if (!loginUser.value.trim()) {
-        errors.push({field: loginUser, msg: "Username required."});
-      }
-      if (!loginPass.value) {
-        errors.push({field: loginPass, msg: "Password required."});
-      }
-
-      if (errors.length > 0) {
-        let errorMsgs = [];
-        errors.forEach(e => {
-          reShake(e.field);
-          errorMsgs.push("❌ " + e.msg);
-        });
-        loginMsg.textContent = errorMsgs.join(' ');
-        loginMsg.style.color = "#dc2626";
-        vibrate(120);
-        errors[0].field.focus();
-        return;
-      }
-
-      const doc = await db.collection("users").doc(loginUser.value.trim()).get();
-      if (!doc.exists || doc.data().pass !== loginPass.value) {
-        loginMsg.textContent = "❌ Invalid username or password.";
-        loginMsg.style.color = "#dc2626";
-        reShake(loginUser);
-        reShake(loginPass);
-        vibrate(120);
-        loginUser.focus();
-        return;
-      }
-      localStorage.setItem('currentUser', loginUser.value.trim());
-      loginMsg.textContent = "✅ Login successful! Redirecting...";
-      loginMsg.style.color = "#16a34a";
-      setTimeout(() => window.location = "CODE2.html", 1200);
-    };
-
-    setTimeout(() => signupUser.focus(), 400);
-
     // --- Popup logic with shrink/fade to logo ---
     const popup = document.getElementById('profilePopup');
     const popupContent = popup.querySelector('.popup-content');
@@ -733,7 +845,6 @@
     const logoImgs = document.querySelectorAll('.login-3d-logo');
     const clickHereTxts = [document.getElementById('clickHereTxt'), document.getElementById('clickHereTxt2')];
 
-    // Helper: get the center of the visible logo
     function getLogoCenter() {
       let logo = document.querySelector('.login-3d-logo:not(.hide)');
       if (!logo) logo = document.querySelector('.login-3d-logo');
@@ -743,8 +854,6 @@
         y: rect.top + rect.height/2
       };
     }
-
-    // Helper: set popup-content transform-origin to logo center
     function setPopupOriginToLogo() {
       const logoCenter = getLogoCenter();
       const popupRect = popupContent.getBoundingClientRect();
@@ -752,8 +861,6 @@
       const originY = logoCenter.y - popupRect.top;
       popupContent.style.transformOrigin = `${originX}px ${originY}px`;
     }
-
-    // Show popup with animation from logo
     function openPopup() {
       popup.classList.add('open');
       setPopupOriginToLogo();
@@ -762,7 +869,6 @@
         popupContent.style.transform = 'scale(1)';
       });
     }
-
     function closePopup() {
       setPopupOriginToLogo();
       popupContent.style.opacity = '0';
@@ -771,12 +877,9 @@
         popup.classList.remove('open');
       }, 450);
     }
-
-    // Logo click logic
     logoImgs.forEach(logo => {
       logo.style.cursor = 'pointer';
       logo.addEventListener('click', () => {
-        // On first click, hide the "Click here" text
         clickHereTxts.forEach(txt => txt.style.display = 'none');
         if (popup.classList.contains('open')) {
           closePopup();
@@ -785,15 +888,10 @@
         }
       });
     });
-
     popupCloseBtn.addEventListener('click', closePopup);
-
-    // Optional: close popup when clicking outside content
     popup.addEventListener('click', e => {
       if (e.target === popup) closePopup();
     });
-
-    // When popup closes, reset style for next open
     popup.addEventListener('transitionend', () => {
       if (!popup.classList.contains('open')) {
         popupContent.style.opacity = '0';
@@ -802,4 +900,4 @@
     });
   </script>
 </body>
-        </html>
+</html>
